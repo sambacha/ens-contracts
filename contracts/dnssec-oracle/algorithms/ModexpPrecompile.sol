@@ -20,7 +20,7 @@ library ModexpPrecompile {
 
         output = new bytes(modulus.length);
 
-        assembly {
+        assembly ("memory-safe") {
             success := staticcall(
                 gas(),
                 5,

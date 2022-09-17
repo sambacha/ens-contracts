@@ -54,7 +54,8 @@
     "dns-packet": "^5.3.0"
   },
   "directories": {
-    "test": "test"
+    "test": "test",
+    "contracts": "contracts"
   },
   "repository": {
     "type": "git",

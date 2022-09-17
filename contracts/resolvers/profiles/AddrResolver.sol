@@ -88,14 +88,14 @@ abstract contract AddrResolver is
         returns (address payable a)
     {
         require(b.length == 20);
-        assembly {
+        assembly ("memory-safe") {
             a := div(mload(add(b, 32)), exp(256, 12))
         }
     }
 
     function addressToBytes(address a) internal pure returns (bytes memory b) {
         b = new bytes(20);
-        assembly {
+        assembly ("memory-safe") {
             mstore(add(b, 32), mul(a, exp(256, 12)))
         }
     }
