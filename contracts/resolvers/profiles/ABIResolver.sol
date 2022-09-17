@@ -44,15 +44,8 @@ abstract contract ABIResolver is IABIResolver, ResolverBase {
     {
         mapping(uint256 => bytes) storage abiset = abis[node];
 
-        for (
-            uint256 contentType = 1;
-            contentType <= contentTypes;
-            contentType <<= 1
-        ) {
-            if (
-                (contentType & contentTypes) != 0 &&
-                abiset[contentType].length > 0
-            ) {
+        for (uint256 contentType = 1; contentType <= contentTypes; contentType <<= 1) {
+            if ((contentType & contentTypes) != 0 && abiset[contentType].length > 0) {
                 return (contentType, abiset[contentType]);
             }
         }
@@ -60,15 +53,8 @@ abstract contract ABIResolver is IABIResolver, ResolverBase {
         return (0, bytes(""));
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) public view virtual override returns (bool) {
         return
-            interfaceID == type(IABIResolver).interfaceId ||
-            super.supportsInterface(interfaceID);
+            interfaceID == type(IABIResolver).interfaceId || super.supportsInterface(interfaceID);
     }
 }

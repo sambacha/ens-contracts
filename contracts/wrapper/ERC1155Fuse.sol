@@ -50,17 +50,8 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
      *
      * - `account` cannot be the zero address.
      */
-    function balanceOf(address account, uint256 id)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            account != address(0),
-            "ERC1155: balance query for the zero address"
-        );
+    function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
+        require(account != address(0), "ERC1155: balance query for the zero address");
         (address owner, , ) = getData(id);
         if (owner == account) {
             return 1;
@@ -82,10 +73,7 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
         override
         returns (uint256[] memory)
     {
-        require(
-            accounts.length == ids.length,
-            "ERC1155: accounts and ids length mismatch"
-        );
+        require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
@@ -99,15 +87,8 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {IERC1155-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override
-    {
-        require(
-            msg.sender != operator,
-            "ERC1155: setting approval status for self"
-        );
+    function setApprovalForAll(address operator, bool approved) public virtual override {
+        require(msg.sender != operator, "ERC1155: setting approval status for self");
 
         _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
@@ -192,10 +173,7 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory amounts,
         bytes memory data
     ) public virtual override {
-        require(
-            ids.length == amounts.length,
-            "ERC1155: ids and amounts length mismatch"
-        );
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
         require(
             from == msg.sender || isApprovedForAll(from, msg.sender),
@@ -212,23 +190,13 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
                 revert OperationProhibited(bytes32(id));
             }
 
-            require(
-                amount == 1 && oldOwner == from,
-                "ERC1155: insufficient balance for transfer"
-            );
+            require(amount == 1 && oldOwner == from, "ERC1155: insufficient balance for transfer");
             _setData(id, to, fuses, expiration);
         }
 
         emit TransferBatch(msg.sender, from, to, ids, amounts);
 
-        _doSafeBatchTransferAcceptanceCheck(
-            msg.sender,
-            from,
-            to,
-            ids,
-            amounts,
-            data
-        );
+        _doSafeBatchTransferAcceptanceCheck(msg.sender, from, to, ids, amounts, data);
     }
 
     /**************************************************************************
@@ -244,9 +212,7 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
         uint64 expiry
     ) internal virtual {
         uint256 tokenId = uint256(node);
-        (address oldOwner, uint32 oldFuses, uint64 oldExpiry) = getData(
-            uint256(node)
-        );
+        (address oldOwner, uint32 oldFuses, uint64 oldExpiry) = getData(uint256(node));
 
         if (oldExpiry > expiry) {
             expiry = oldExpiry;
@@ -254,21 +220,11 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
 
         require(oldOwner == address(0), "ERC1155: mint of existing token");
         require(owner != address(0), "ERC1155: mint to the zero address");
-        require(
-            owner != address(this),
-            "ERC1155: newOwner cannot be the NameWrapper contract"
-        );
+        require(owner != address(this), "ERC1155: newOwner cannot be the NameWrapper contract");
 
         _setData(tokenId, owner, fuses | oldFuses, expiry);
         emit TransferSingle(msg.sender, address(0x0), owner, tokenId, 1);
-        _doSafeTransferAcceptanceCheck(
-            msg.sender,
-            address(0),
-            owner,
-            tokenId,
-            1,
-            ""
-        );
+        _doSafeTransferAcceptanceCheck(msg.sender, address(0), owner, tokenId, 1, "");
     }
 
     function _burn(uint256 tokenId) internal virtual {
@@ -291,10 +247,7 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
             revert OperationProhibited(bytes32(id));
         }
 
-        require(
-            amount == 1 && oldOwner == from,
-            "ERC1155: insufficient balance for transfer"
-        );
+        require(amount == 1 && oldOwner == from, "ERC1155: insufficient balance for transfer");
 
         if (oldOwner == to) {
             return;
@@ -316,18 +269,10 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try
-                IERC1155Receiver(to).onERC1155Received(
-                    operator,
-                    from,
-                    id,
-                    amount,
-                    data
-                )
-            returns (bytes4 response) {
-                if (
-                    response != IERC1155Receiver(to).onERC1155Received.selector
-                ) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (
+                bytes4 response
+            ) {
+                if (response != IERC1155Receiver(to).onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -348,18 +293,9 @@ abstract contract ERC1155Fuse is ERC165, IERC1155, IERC1155MetadataURI {
     ) private {
         if (to.isContract()) {
             try
-                IERC1155Receiver(to).onERC1155BatchReceived(
-                    operator,
-                    from,
-                    ids,
-                    amounts,
-                    data
-                )
+                IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data)
             returns (bytes4 response) {
-                if (
-                    response !=
-                    IERC1155Receiver(to).onERC1155BatchReceived.selector
-                ) {
+                if (response != IERC1155Receiver(to).onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {

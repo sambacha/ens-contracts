@@ -39,12 +39,7 @@ contract ETHRegistrarController is Ownable, IETHRegistrarController {
         uint256 premium,
         uint256 expires
     );
-    event NameRenewed(
-        string name,
-        bytes32 indexed label,
-        uint256 cost,
-        uint256 expires
-    );
+    event NameRenewed(string name, bytes32 indexed label, uint256 cost, uint256 expires);
 
     constructor(
         BaseRegistrarImplementation _base,
@@ -183,17 +178,11 @@ contract ETHRegistrarController is Ownable, IETHRegistrarController {
         );
 
         if (msg.value > (price.base + price.premium)) {
-            payable(msg.sender).transfer(
-                msg.value - (price.base + price.premium)
-            );
+            payable(msg.sender).transfer(msg.value - (price.base + price.premium));
         }
     }
 
-    function renew(string calldata name, uint256 duration)
-        external
-        payable
-        override
-    {
+    function renew(string calldata name, uint256 duration) external payable override {
         _renew(name, duration, 0, 0);
     }
 
@@ -222,18 +211,10 @@ contract ETHRegistrarController is Ownable, IETHRegistrarController {
         bytes32 nodehash = keccak256(abi.encodePacked(ETH_NODE, labelhash));
         uint256 tokenId = uint256(labelhash);
         IPriceOracle.Price memory price = rentPrice(name, duration);
-        require(
-            msg.value >= price.base,
-            "ETHController: Not enough Ether provided for renewal"
-        );
+        require(msg.value >= price.base, "ETHController: Not enough Ether provided for renewal");
         uint256 expires;
         if (nameWrapper.isWrapped(nodehash)) {
-            expires = nameWrapper.renew(
-                tokenId,
-                duration,
-                fuses,
-                wrapperExpiry
-            );
+            expires = nameWrapper.renew(tokenId, duration, fuses, wrapperExpiry);
         } else {
             expires = base.renew(tokenId, duration);
         }
@@ -249,11 +230,7 @@ contract ETHRegistrarController is Ownable, IETHRegistrarController {
         payable(owner()).transfer(address(this).balance);
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
         return
             interfaceID == type(IERC165).interfaceId ||
             interfaceID == type(IETHRegistrarController).interfaceId;
@@ -300,11 +277,6 @@ contract ETHRegistrarController is Ownable, IETHRegistrarController {
         address resolver,
         address owner
     ) internal {
-        reverseRegistrar.setNameForAddr(
-            msg.sender,
-            owner,
-            resolver,
-            string.concat(name, ".eth")
-        );
+        reverseRegistrar.setNameForAddr(msg.sender, owner, resolver, string.concat(name, ".eth"));
     }
 }

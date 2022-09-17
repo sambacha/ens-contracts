@@ -24,13 +24,7 @@ error IncorrectTargetOwner(address owner);
 error CannotUpgrade();
 error InvalidExpiry(bytes32 node, uint64 expiry);
 
-contract NameWrapper is
-    Ownable,
-    ERC1155Fuse,
-    INameWrapper,
-    Controllable,
-    IERC721Receiver
-{
+contract NameWrapper is Ownable, ERC1155Fuse, INameWrapper, Controllable, IERC721Receiver {
     using BytesUtils for bytes;
     ENS public immutable override ens;
     IBaseRegistrar public immutable override registrar;
@@ -103,10 +97,7 @@ contract NameWrapper is
      * @notice Set the metadata service. Only the owner can do this
      */
 
-    function setMetadataService(IMetadataService _newMetadataService)
-        public
-        onlyOwner
-    {
+    function setMetadataService(IMetadataService _newMetadataService) public onlyOwner {
         metadataService = _newMetadataService;
     }
 
@@ -126,10 +117,7 @@ contract NameWrapper is
      * @param _upgradeAddress address of an upgraded contract
      */
 
-    function setUpgradeContract(INameWrapperUpgrade _upgradeAddress)
-        public
-        onlyOwner
-    {
+    function setUpgradeContract(INameWrapperUpgrade _upgradeAddress) public onlyOwner {
         if (address(upgradeContract) != address(0)) {
             registrar.setApprovalForAll(address(upgradeContract), false);
             ens.setApprovalForAll(address(upgradeContract), false);
@@ -192,14 +180,8 @@ contract NameWrapper is
     ) public override returns (uint64) {
         uint256 tokenId = uint256(keccak256(bytes(label)));
         address registrant = registrar.ownerOf(tokenId);
-        if (
-            registrant != msg.sender &&
-            !registrar.isApprovedForAll(registrant, msg.sender)
-        ) {
-            revert Unauthorised(
-                _makeNode(ETH_NODE, bytes32(tokenId)),
-                msg.sender
-            );
+        if (registrant != msg.sender && !registrar.isApprovedForAll(registrant, msg.sender)) {
+            revert Unauthorised(_makeNode(ETH_NODE, bytes32(tokenId)), msg.sender);
         }
 
         // transfer the token from the user to this contract
@@ -252,9 +234,7 @@ contract NameWrapper is
         bytes32 node = _makeNode(ETH_NODE, bytes32(tokenId));
 
         expires = registrar.renew(tokenId, duration);
-        (address owner, uint32 oldFuses, uint64 oldExpiry) = getData(
-            uint256(node)
-        );
+        (address owner, uint32 oldFuses, uint64 oldExpiry) = getData(uint256(node));
         expiry = _normaliseExpiry(expiry, oldExpiry, uint64(expires));
 
         _setData(node, owner, oldFuses | fuses | PARENT_CANNOT_CONTROL, expiry);
@@ -346,9 +326,7 @@ contract NameWrapper is
     {
         _checkForParentCannotControl(node, fuses);
 
-        (address owner, uint32 oldFuses, uint64 expiry) = getData(
-            uint256(node)
-        );
+        (address owner, uint32 oldFuses, uint64 expiry) = getData(uint256(node));
 
         fuses |= oldFuses;
         _setFuses(node, owner, fuses, expiry);
@@ -372,13 +350,7 @@ contract NameWrapper is
         bytes32 node = _makeNode(ETH_NODE, labelhash);
         (uint32 fuses, uint64 expiry) = _prepareUpgrade(node);
 
-        upgradeContract.wrapETH2LD(
-            label,
-            wrappedOwner,
-            fuses,
-            expiry,
-            resolver
-        );
+        upgradeContract.wrapETH2LD(label, wrappedOwner, fuses, expiry, resolver);
     }
 
     /**
@@ -425,13 +397,9 @@ contract NameWrapper is
         uint64 expiry
     ) public {
         bytes32 node = _makeNode(parentNode, labelhash);
-        (address owner, uint32 oldFuses, uint64 oldExpiry) = getData(
-            uint256(node)
-        );
+        (address owner, uint32 oldFuses, uint64 oldExpiry) = getData(uint256(node));
         uint64 maxExpiry;
-        (, uint32 parentFuses, uint64 parentExpiry) = getData(
-            uint256(parentNode)
-        );
+        (, uint32 parentFuses, uint64 parentExpiry) = getData(uint256(parentNode));
         if (parentNode == ETH_NODE) {
             if (!isTokenOwnerOrApproved(node, msg.sender)) {
                 revert Unauthorised(node, msg.sender);
@@ -452,10 +420,7 @@ contract NameWrapper is
         expiry = _normaliseExpiry(expiry, oldExpiry, maxExpiry);
 
         // if PARENT_CANNOT_CONTROL has been burned and fuses have changed
-        if (
-            oldFuses & PARENT_CANNOT_CONTROL != 0 &&
-            oldFuses | fuses != oldFuses
-        ) {
+        if (oldFuses & PARENT_CANNOT_CONTROL != 0 && oldFuses | fuses != oldFuses) {
             revert OperationProhibited(node);
         }
         fuses |= oldFuses;
@@ -491,14 +456,7 @@ contract NameWrapper is
             ens.setSubnodeOwner(parentNode, labelhash, address(this));
             _addLabelAndWrap(parentNode, node, label, owner, fuses, expiry);
         } else {
-            _addLabelSetFusesAndTransfer(
-                parentNode,
-                node,
-                label,
-                owner,
-                fuses,
-                expiry
-            );
+            _addLabelSetFusesAndTransfer(parentNode, node, label, owner, fuses, expiry);
         }
     }
 
@@ -530,30 +488,11 @@ contract NameWrapper is
         bytes32 node = _makeNode(parentNode, labelhash);
         expiry = _checkParentFusesAndExpiry(parentNode, node, fuses, expiry);
         if (!isWrapped(node)) {
-            ens.setSubnodeRecord(
-                parentNode,
-                labelhash,
-                address(this),
-                resolver,
-                ttl
-            );
+            ens.setSubnodeRecord(parentNode, labelhash, address(this), resolver, ttl);
             _addLabelAndWrap(parentNode, node, label, owner, fuses, expiry);
         } else {
-            ens.setSubnodeRecord(
-                parentNode,
-                labelhash,
-                address(this),
-                resolver,
-                ttl
-            );
-            _addLabelSetFusesAndTransfer(
-                parentNode,
-                node,
-                label,
-                owner,
-                fuses,
-                expiry
-            );
+            ens.setSubnodeRecord(parentNode, labelhash, address(this), resolver, ttl);
+            _addLabelSetFusesAndTransfer(parentNode, node, label, owner, fuses, expiry);
         }
     }
 
@@ -574,10 +513,7 @@ contract NameWrapper is
         public
         override
         onlyTokenOwner(node)
-        operationAllowed(
-            node,
-            CANNOT_TRANSFER | CANNOT_SET_RESOLVER | CANNOT_SET_TTL
-        )
+        operationAllowed(node, CANNOT_TRANSFER | CANNOT_SET_RESOLVER | CANNOT_SET_TTL)
     {
         ens.setRecord(node, address(this), resolver, ttl);
         (address oldOwner, , ) = getData(uint256(node));
@@ -664,12 +600,7 @@ contract NameWrapper is
      * @return Boolean of whether or not all the selected fuses are burned
      */
 
-    function allFusesBurned(bytes32 node, uint32 fuseMask)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function allFusesBurned(bytes32 node, uint32 fuseMask) public view override returns (bool) {
         (, uint32 fuses, ) = getData(uint256(node));
         return fuses & fuseMask == fuseMask;
     }
@@ -681,9 +612,7 @@ contract NameWrapper is
      */
 
     function isWrapped(bytes32 node) public view override returns (bool) {
-        return
-            ownerOf(uint256(node)) != address(0) &&
-            ens.owner(node) == address(this);
+        return ownerOf(uint256(node)) != address(0) && ens.owner(node) == address(this);
     }
 
     function onERC721Received(
@@ -697,13 +626,8 @@ contract NameWrapper is
             revert IncorrectTokenType();
         }
 
-        (
-            string memory label,
-            address owner,
-            uint32 fuses,
-            uint64 expiry,
-            address resolver
-        ) = abi.decode(data, (string, address, uint32, uint64, address));
+        (string memory label, address owner, uint32 fuses, uint64 expiry, address resolver) = abi
+            .decode(data, (string, address, uint32, uint64, address));
 
         bytes32 labelhash = bytes32(tokenId);
         bytes32 labelhashFromData = keccak256(bytes(label));
@@ -726,11 +650,7 @@ contract NameWrapper is
         return fuses & CANNOT_TRANSFER == 0;
     }
 
-    function _makeNode(bytes32 node, bytes32 labelhash)
-        private
-        pure
-        returns (bytes32)
-    {
+    function _makeNode(bytes32 node, bytes32 labelhash) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(node, labelhash));
     }
 
@@ -788,10 +708,7 @@ contract NameWrapper is
         _wrap(node, name, owner, fuses, expiry);
     }
 
-    function _prepareUpgrade(bytes32 node)
-        private
-        returns (uint32 fuses, uint64 expiry)
-    {
+    function _prepareUpgrade(bytes32 node) private returns (uint32 fuses, uint64 expiry) {
         if (address(upgradeContract) == address(0)) {
             revert CannotUpgrade();
         }
@@ -841,8 +758,7 @@ contract NameWrapper is
         uint32 fuses,
         uint32 parentFuses
     ) internal pure {
-        bool isBurningPCC = fuses & PARENT_CANNOT_CONTROL ==
-            PARENT_CANNOT_CONTROL;
+        bool isBurningPCC = fuses & PARENT_CANNOT_CONTROL == PARENT_CANNOT_CONTROL;
 
         bool parentHasNotBurnedCU = parentFuses & CANNOT_UNWRAP == 0;
 
@@ -903,11 +819,7 @@ contract NameWrapper is
         bytes32 node = _makeNode(ETH_NODE, labelhash);
         uint32 oldFuses;
 
-        (, oldFuses, expiry) = _getETH2LDDataAndNormaliseExpiry(
-            node,
-            labelhash,
-            expiry
-        );
+        (, oldFuses, expiry) = _getETH2LDDataAndNormaliseExpiry(node, labelhash, expiry);
 
         _addLabelAndWrap(
             ETH_NODE,
@@ -970,10 +882,7 @@ contract NameWrapper is
         }
     }
 
-    function _checkForParentCannotControl(bytes32 node, uint32 fuses)
-        internal
-        view
-    {
+    function _checkForParentCannotControl(bytes32 node, uint32 fuses) internal view {
         if (fuses & PARENT_CANNOT_CONTROL != 0) {
             // Only the parent can burn the PARENT_CANNOT_CONTROL fuse.
             revert Unauthorised(node, msg.sender);

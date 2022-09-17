@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 library LowLevelCallUtils {
     using Address for address;
@@ -19,19 +19,9 @@ library LowLevelCallUtils {
         view
         returns (bool success)
     {
-        require(
-            target.isContract(),
-            "LowLevelCallUtils: static call to non-contract"
-        );
+        require(target.isContract(), "LowLevelCallUtils: static call to non-contract");
         assembly ("memory-safe") {
-            success := staticcall(
-                gas(),
-                target,
-                add(data, 32),
-                mload(data),
-                0,
-                0
-            )
+            success := staticcall(gas(), target, add(data, 32), mload(data), 0, 0)
         }
     }
 

@@ -50,10 +50,7 @@ library SHA1 {
                 // If this is the last block, store the length
                 switch eq(i, sub(totallen, 64))
                 case 1 {
-                    mstore(
-                        add(scratch, 32),
-                        or(mload(add(scratch, 32)), mul(len, 8))
-                    )
+                    mstore(add(scratch, 32), or(mload(add(scratch, 32)), mul(len, 8)))
                 }
 
                 // Expand the 16 32-bit words into 80
@@ -63,14 +60,8 @@ library SHA1 {
                     j := add(j, 12)
                 } {
                     let temp := xor(
-                        xor(
-                            mload(add(scratch, sub(j, 12))),
-                            mload(add(scratch, sub(j, 32)))
-                        ),
-                        xor(
-                            mload(add(scratch, sub(j, 56))),
-                            mload(add(scratch, sub(j, 64)))
-                        )
+                        xor(mload(add(scratch, sub(j, 12))), mload(add(scratch, sub(j, 32)))),
+                        xor(mload(add(scratch, sub(j, 56))), mload(add(scratch, sub(j, 64))))
                     )
                     temp := or(
                         and(
@@ -90,14 +81,8 @@ library SHA1 {
                     j := add(j, 24)
                 } {
                     let temp := xor(
-                        xor(
-                            mload(add(scratch, sub(j, 24))),
-                            mload(add(scratch, sub(j, 64)))
-                        ),
-                        xor(
-                            mload(add(scratch, sub(j, 112))),
-                            mload(add(scratch, sub(j, 128)))
-                        )
+                        xor(mload(add(scratch, sub(j, 24))), mload(add(scratch, sub(j, 64)))),
+                        xor(mload(add(scratch, sub(j, 112))), mload(add(scratch, sub(j, 128))))
                     )
                     temp := or(
                         and(
@@ -123,10 +108,7 @@ library SHA1 {
                     switch div(j, 20)
                     case 0 {
                         // f = d xor (b and (c xor d))
-                        f := xor(
-                            div(x, 0x100000000000000000000),
-                            div(x, 0x10000000000)
-                        )
+                        f := xor(div(x, 0x100000000000000000000), div(x, 0x10000000000))
                         f := and(div(x, 0x1000000000000000000000000000000), f)
                         f := xor(div(x, 0x10000000000), f)
                         k := 0x5A827999
@@ -166,18 +148,9 @@ library SHA1 {
                         k := 0xCA62C1D6
                     }
                     // temp = (a leftrotate 5) + f + e + k + w[i]
-                    let temp := and(
-                        div(
-                            x,
-                            0x80000000000000000000000000000000000000000000000
-                        ),
-                        0x1F
-                    )
+                    let temp := and(div(x, 0x80000000000000000000000000000000000000000000000), 0x1F)
                     temp := or(
-                        and(
-                            div(x, 0x800000000000000000000000000000000000000),
-                            0xFFFFFFE0
-                        ),
+                        and(div(x, 0x800000000000000000000000000000000000000), 0xFFFFFFE0),
                         temp
                     )
                     temp := add(f, temp)
@@ -195,10 +168,7 @@ library SHA1 {
                         mul(temp, 0x10000000000000000000000000000000000000000)
                     )
                     x := or(
-                        and(
-                            x,
-                            0xFFFFFFFF00FFFFFFFF000000000000FFFFFFFF00FFFFFFFF
-                        ),
+                        and(x, 0xFFFFFFFF00FFFFFFFF000000000000FFFFFFFF00FFFFFFFF),
                         mul(
                             or(
                                 and(div(x, 0x4000000000000), 0xC0000000),
@@ -209,10 +179,7 @@ library SHA1 {
                     )
                 }
 
-                h := and(
-                    add(h, x),
-                    0xFFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF
-                )
+                h := and(add(h, x), 0xFFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF)
             }
             ret := mul(
                 or(
@@ -223,10 +190,7 @@ library SHA1 {
                                     div(h, 0x100000000),
                                     0xFFFFFFFF00000000000000000000000000000000
                                 ),
-                                and(
-                                    div(h, 0x1000000),
-                                    0xFFFFFFFF000000000000000000000000
-                                )
+                                and(div(h, 0x1000000), 0xFFFFFFFF000000000000000000000000)
                             ),
                             and(div(h, 0x10000), 0xFFFFFFFF0000000000000000)
                         ),

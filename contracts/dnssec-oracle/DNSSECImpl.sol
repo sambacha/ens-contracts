@@ -169,11 +169,7 @@ contract DNSSECImpl is DNSSEC, Owned {
             )
         );
 
-        for (
-            RRUtils.RRIterator memory iter = rrset.rrs();
-            !iter.done();
-            iter.next()
-        ) {
+        for (RRUtils.RRIterator memory iter = rrset.rrs(); !iter.done(); iter.next()) {
             // We're dealing with three names here:
             //   - deleteName is the name the user wants us to delete
             //   - nsecName is the owner name of the NSEC record
@@ -210,18 +206,10 @@ contract DNSSECImpl is DNSSEC, Owned {
         int256 compareResult = deleteName.compareNames(nsecName);
         if (compareResult == 0) {
             // Name to delete is on the same label as the NSEC record
-            require(
-                !iter.data.checkTypeBitmap(
-                    rdataOffset + nextNameLength,
-                    deleteType
-                )
-            );
+            require(!iter.data.checkTypeBitmap(rdataOffset + nextNameLength, deleteType));
         } else {
             // First check if the NSEC next name comes after the NSEC name.
-            bytes memory nextName = iter.data.substring(
-                rdataOffset,
-                nextNameLength
-            );
+            bytes memory nextName = iter.data.substring(rdataOffset, nextNameLength);
             // deleteName must come after nsecName
             require(compareResult > 0);
             if (nsecName.compareNames(nextName) < 0) {
@@ -259,13 +247,9 @@ contract DNSSECImpl is DNSSEC, Owned {
         RRSetWithSignature memory nextClosest,
         bytes memory dnskey
     ) public override {
-        uint32 originalInception = rrsets[keccak256(deleteName)][deleteType]
-            .inception;
+        uint32 originalInception = rrsets[keccak256(deleteName)][deleteType].inception;
 
-        RRUtils.SignedSet memory ce = validateSignedSet(
-            closestEncloser,
-            dnskey
-        );
+        RRUtils.SignedSet memory ce = validateSignedSet(closestEncloser, dnskey);
         checkNSEC3Validity(ce, deleteName, originalInception);
 
         RRUtils.SignedSet memory nc;
@@ -281,23 +265,14 @@ contract DNSSECImpl is DNSSEC, Owned {
         // "The DNAME type bit must not be set and the NS type bit may only be set if the SOA type bit is set."
         require(
             !ceNSEC3.checkTypeBitmap(DNSTYPE_DNAME) &&
-                (!ceNSEC3.checkTypeBitmap(DNSTYPE_NS) ||
-                    ceNSEC3.checkTypeBitmap(DNSTYPE_SOA))
+                (!ceNSEC3.checkTypeBitmap(DNSTYPE_NS) || ceNSEC3.checkTypeBitmap(DNSTYPE_SOA))
         );
 
         // Case 1: deleteName does exist, but no records of RRTYPE deleteType do.
         if (isMatchingNSEC3Record(deleteType, deleteName, ce.name, ceNSEC3)) {
             delete rrsets[keccak256(deleteName)][deleteType];
             // Case 2: deleteName does not exist.
-        } else if (
-            isCoveringNSEC3Record(
-                deleteName,
-                ce.name,
-                ceNSEC3,
-                nc.name,
-                readNSEC3(nc)
-            )
-        ) {
+        } else if (isCoveringNSEC3Record(deleteName, ce.name, ceNSEC3, nc.name, readNSEC3(nc))) {
             delete rrsets[keccak256(deleteName)][deleteType];
         } else {
             revert();
@@ -356,27 +331,17 @@ contract DNSSECImpl is DNSSEC, Owned {
             offset += deleteName.readUint8(offset) + 1
         ) {
             if (
-                hashName(
-                    ce,
-                    deleteName.substring(offset, deleteName.length - offset)
-                ) == ceNameHash
+                hashName(ce, deleteName.substring(offset, deleteName.length - offset)) == ceNameHash
             ) {
                 // Check that the next closest record encloses the name one label longer
                 bytes32 checkHash = hashName(
                     nc,
-                    deleteName.substring(
-                        lastOffset,
-                        deleteName.length - lastOffset
-                    )
+                    deleteName.substring(lastOffset, deleteName.length - lastOffset)
                 );
                 if (ncNameHash < nc.nextHashedOwnerName) {
-                    return
-                        checkHash > ncNameHash &&
-                        checkHash < nc.nextHashedOwnerName;
+                    return checkHash > ncNameHash && checkHash < nc.nextHashedOwnerName;
                 } else {
-                    return
-                        checkHash > ncNameHash ||
-                        checkHash < nc.nextHashedOwnerName;
+                    return checkHash > ncNameHash || checkHash < nc.nextHashedOwnerName;
                 }
             }
             lastOffset = offset;
@@ -385,17 +350,9 @@ contract DNSSECImpl is DNSSEC, Owned {
         return false;
     }
 
-    function readNSEC3(RRUtils.SignedSet memory ss)
-        private
-        pure
-        returns (RRUtils.NSEC3 memory)
-    {
+    function readNSEC3(RRUtils.SignedSet memory ss) private pure returns (RRUtils.NSEC3 memory) {
         RRUtils.RRIterator memory iter = ss.rrs();
-        return
-            iter.data.readNSEC3(
-                iter.rdataOffset,
-                iter.nextOffset - iter.rdataOffset
-            );
+        return iter.data.readNSEC3(iter.rdataOffset, iter.nextOffset - iter.rdataOffset);
     }
 
     function checkNSEC3Name(
@@ -412,24 +369,11 @@ contract DNSSECImpl is DNSSEC, Owned {
         return deleteNameHash == nsecNameHash;
     }
 
-    function hashName(RRUtils.NSEC3 memory nsec, bytes memory name)
-        private
-        view
-        returns (bytes32)
-    {
-        return
-            nsec3Digests[nsec.hashAlgorithm].hash(
-                nsec.salt,
-                name,
-                nsec.iterations
-            );
+    function hashName(RRUtils.NSEC3 memory nsec, bytes memory name) private view returns (bytes32) {
+        return nsec3Digests[nsec.hashAlgorithm].hash(nsec.salt, name, nsec.iterations);
     }
 
-    function decodeOwnerNameHash(bytes memory name)
-        private
-        pure
-        returns (bytes32)
-    {
+    function decodeOwnerNameHash(bytes memory name) private pure returns (bytes32) {
         return name.base32HexDecodeWord(1, uint256(name.readUint8(0)));
     }
 
@@ -478,14 +422,10 @@ contract DNSSECImpl is DNSSEC, Owned {
         RRUtils.SignedSet memory rrset;
         rrset = validateSignedSet(input, proof);
 
-        RRSet storage storedSet = rrsets[keccak256(rrset.name)][
-            rrset.typeCovered
-        ];
+        RRSet storage storedSet = rrsets[keccak256(rrset.name)][rrset.typeCovered];
         if (storedSet.hash != bytes20(0)) {
             // To replace an existing rrset, the signature must be at least as new
-            require(
-                RRUtils.serialNumberGte(rrset.inception, storedSet.inception)
-            );
+            require(RRUtils.serialNumberGte(rrset.inception, storedSet.inception));
         }
         rrsets[keccak256(rrset.name)][rrset.typeCovered] = RRSet({
             inception: rrset.inception,
@@ -512,10 +452,11 @@ contract DNSSECImpl is DNSSEC, Owned {
      * @param proof The DNSKEY or DS to validate the signature against. Must Already
      *        have been submitted and proved previously.
      */
-    function validateSignedSet(
-        RRSetWithSignature memory input,
-        bytes memory proof
-    ) internal view returns (RRUtils.SignedSet memory rrset) {
+    function validateSignedSet(RRSetWithSignature memory input, bytes memory proof)
+        internal
+        view
+        returns (RRUtils.SignedSet memory rrset)
+    {
         rrset = input.rrset.readSignedSet();
         require(validProof(rrset.signerName, proof));
 
@@ -530,15 +471,11 @@ contract DNSSECImpl is DNSSEC, Owned {
 
         // o  The validator's notion of the current time MUST be less than or
         //    equal to the time listed in the RRSIG RR's Expiration field.
-        require(
-            RRUtils.serialNumberGte(rrset.expiration, uint32(block.timestamp))
-        );
+        require(RRUtils.serialNumberGte(rrset.expiration, uint32(block.timestamp)));
 
         // o  The validator's notion of the current time MUST be greater than or
         //    equal to the time listed in the RRSIG RR's Inception field.
-        require(
-            RRUtils.serialNumberGte(uint32(block.timestamp), rrset.inception)
-        );
+        require(RRUtils.serialNumberGte(uint32(block.timestamp), rrset.inception));
 
         // Validate the signature
         verifySignature(name, rrset, input, proof);
@@ -546,14 +483,9 @@ contract DNSSECImpl is DNSSEC, Owned {
         return rrset;
     }
 
-    function validProof(bytes memory name, bytes memory proof)
-        internal
-        view
-        returns (bool)
-    {
+    function validProof(bytes memory name, bytes memory proof) internal view returns (bool) {
         uint16 dnstype = proof.readUint16(proof.nameLength(0));
-        return
-            rrsets[keccak256(name)][dnstype].hash == bytes20(keccak256(proof));
+        return rrsets[keccak256(name)][dnstype].hash == bytes20(keccak256(proof));
     }
 
     /**
@@ -567,11 +499,7 @@ contract DNSSECImpl is DNSSEC, Owned {
         returns (bytes memory name)
     {
         // Iterate over all the RRs
-        for (
-            RRUtils.RRIterator memory iter = rrset.rrs();
-            !iter.done();
-            iter.next()
-        ) {
+        for (RRUtils.RRIterator memory iter = rrset.rrs(); !iter.done(); iter.next()) {
             // We only support class IN (Internet)
             require(iter.class == DNSCLASS_IN);
 
@@ -607,13 +535,7 @@ contract DNSSECImpl is DNSSEC, Owned {
         // o  The RRSIG RR's Signer's Name field MUST be the name of the zone
         //    that contains the RRset.
         require(rrset.signerName.length <= name.length);
-        require(
-            rrset.signerName.equals(
-                0,
-                name,
-                name.length - rrset.signerName.length
-            )
-        );
+        require(rrset.signerName.equals(0, name, name.length - rrset.signerName.length));
 
         RRUtils.RRIterator memory proofRR = proof.iterateRRs(0);
         // Check the proof
@@ -643,10 +565,7 @@ contract DNSSECImpl is DNSSEC, Owned {
         for (; !proof.done(); proof.next()) {
             require(proof.name().equals(rrset.signerName));
             bytes memory keyrdata = proof.rdata();
-            RRUtils.DNSKEY memory dnskey = keyrdata.readDNSKEY(
-                0,
-                keyrdata.length
-            );
+            RRUtils.DNSKEY memory dnskey = keyrdata.readDNSKEY(0, keyrdata.length);
             if (verifySignatureWithKey(dnskey, keyrdata, rrset, data)) {
                 return true;
             }
@@ -692,8 +611,7 @@ contract DNSSECImpl is DNSSEC, Owned {
             return false;
         }
 
-        return
-            algorithms[dnskey.algorithm].verify(keyrdata, data.rrset, data.sig);
+        return algorithms[dnskey.algorithm].verify(keyrdata, data.rrset, data.sig);
     }
 
     /**
@@ -709,17 +627,10 @@ contract DNSSECImpl is DNSSEC, Owned {
         RRSetWithSignature memory data,
         RRUtils.RRIterator memory proof
     ) internal view returns (bool) {
-        for (
-            RRUtils.RRIterator memory iter = rrset.rrs();
-            !iter.done();
-            iter.next()
-        ) {
+        for (RRUtils.RRIterator memory iter = rrset.rrs(); !iter.done(); iter.next()) {
             require(iter.dnstype == DNSTYPE_DNSKEY);
             bytes memory keyrdata = iter.rdata();
-            RRUtils.DNSKEY memory dnskey = keyrdata.readDNSKEY(
-                0,
-                keyrdata.length
-            );
+            RRUtils.DNSKEY memory dnskey = keyrdata.readDNSKEY(0, keyrdata.length);
             if (verifySignatureWithKey(dnskey, keyrdata, rrset, data)) {
                 // It's self-signed - look for a DS record to verify it.
                 return verifyKeyWithDS(iter.name(), proof, dnskey, keyrdata);

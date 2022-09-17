@@ -26,18 +26,13 @@ library BytesUtils {
      * @param offset The offset at which to start hashing.
      * @return The namehash of the name.
      */
-    function namehash(bytes memory self, uint256 offset)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function namehash(bytes memory self, uint256 offset) internal pure returns (bytes32) {
         (bytes32 labelhash, uint256 newOffset) = readLabel(self, offset);
         if (labelhash == bytes32(0)) {
             require(offset == self.length - 1, "namehash: Junk at end of name");
             return bytes32(0);
         }
-        return
-            keccak256(abi.encodePacked(namehash(self, newOffset), labelhash));
+        return keccak256(abi.encodePacked(namehash(self, newOffset), labelhash));
     }
 
     /**

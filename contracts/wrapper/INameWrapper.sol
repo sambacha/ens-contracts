@@ -16,13 +16,7 @@ uint32 constant PARENT_CANNOT_CONTROL = 64;
 uint32 constant CAN_DO_EVERYTHING = 0;
 
 interface INameWrapper is IERC1155 {
-    event NameWrapped(
-        bytes32 indexed node,
-        bytes name,
-        address owner,
-        uint32 fuses,
-        uint64 expiry
-    );
+    event NameWrapped(bytes32 indexed node, bytes name, address owner, uint32 fuses, uint64 expiry);
 
     event NameUnwrapped(bytes32 indexed node, address owner);
 
@@ -78,9 +72,7 @@ interface INameWrapper is IERC1155 {
         address newController
     ) external;
 
-    function setFuses(bytes32 node, uint32 fuses)
-        external
-        returns (uint32 newFuses);
+    function setFuses(bytes32 node, uint32 fuses) external returns (uint32 newFuses);
 
     function setChildFuses(
         bytes32 parentNode,
@@ -114,9 +106,7 @@ interface INameWrapper is IERC1155 {
         uint64 expiry
     ) external returns (bytes32);
 
-    function isTokenOwnerOrApproved(bytes32 node, address addr)
-        external
-        returns (bool);
+    function isTokenOwnerOrApproved(bytes32 node, address addr) external returns (bool);
 
     function setResolver(bytes32 node, address resolver) external;
 
@@ -124,10 +114,7 @@ interface INameWrapper is IERC1155 {
 
     function ownerOf(uint256 id) external returns (address owner);
 
-    function allFusesBurned(bytes32 node, uint32 fuseMask)
-        external
-        view
-        returns (bool);
+    function allFusesBurned(bytes32 node, uint32 fuseMask) external view returns (bool);
 
     function isWrapped(bytes32 node) external view returns (bool);
 }

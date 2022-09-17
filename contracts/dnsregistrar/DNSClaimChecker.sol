@@ -27,21 +27,13 @@ library DNSClaimChecker {
         uint32 expiration;
         // Check the provided TXT record has been validated by the oracle
         (, expiration, hash) = oracle.rrdata(TYPE_TXT, buf.buf);
-        if (hash == bytes20(0) && proof.length == 0)
-            return (address(0x0), false);
+        if (hash == bytes20(0) && proof.length == 0) return (address(0x0), false);
 
         require(hash == bytes20(keccak256(proof)));
 
-        for (
-            RRUtils.RRIterator memory iter = proof.iterateRRs(0);
-            !iter.done();
-            iter.next()
-        ) {
+        for (RRUtils.RRIterator memory iter = proof.iterateRRs(0); !iter.done(); iter.next()) {
             require(
-                RRUtils.serialNumberGte(
-                    expiration + iter.ttl,
-                    uint32(block.timestamp)
-                ),
+                RRUtils.serialNumberGte(expiration + iter.ttl, uint32(block.timestamp)),
                 "DNS record is stale; refresh or delete it before proceeding."
             );
 
@@ -56,11 +48,7 @@ library DNSClaimChecker {
         return (address(0x0), false);
     }
 
-    function parseRR(bytes memory rdata, uint256 idx)
-        internal
-        pure
-        returns (address, bool)
-    {
+    function parseRR(bytes memory rdata, uint256 idx) internal pure returns (address, bool) {
         while (idx < rdata.length) {
             uint256 len = rdata.readUint8(idx);
             idx += 1;
@@ -87,11 +75,7 @@ library DNSClaimChecker {
         return hexToAddress(str, idx + 4);
     }
 
-    function hexToAddress(bytes memory str, uint256 idx)
-        internal
-        pure
-        returns (address, bool)
-    {
+    function hexToAddress(bytes memory str, uint256 idx) internal pure returns (address, bool) {
         if (str.length - idx < 40) return (address(0x0), false);
         uint256 ret = 0;
         for (uint256 i = idx; i < idx + 40; i++) {

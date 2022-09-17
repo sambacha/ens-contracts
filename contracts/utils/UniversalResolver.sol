@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {LowLevelCallUtils} from "./LowLevelCallUtils.sol";
-import {ENS} from "../registry/ENS.sol";
-import {IExtendedResolver} from "../resolvers/profiles/IExtendedResolver.sol";
-import {Resolver, INameResolver, IAddrResolver} from "../resolvers/Resolver.sol";
-import {NameEncoder} from "./NameEncoder.sol";
-import {BytesUtils} from "../wrapper/BytesUtil.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { LowLevelCallUtils } from "./LowLevelCallUtils.sol";
+import { ENS } from "../registry/ENS.sol";
+import { IExtendedResolver } from "../resolvers/profiles/IExtendedResolver.sol";
+import { Resolver, INameResolver, IAddrResolver } from "../resolvers/Resolver.sol";
+import { NameEncoder } from "./NameEncoder.sol";
+import { BytesUtils } from "../wrapper/BytesUtil.sol";
 
 error OffchainLookup(
     address sender,
@@ -50,9 +50,9 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
             return ("", address(0));
         }
 
-        try
-            resolver.supportsInterface(type(IExtendedResolver).interfaceId)
-        returns (bool supported) {
+        try resolver.supportsInterface(type(IExtendedResolver).interfaceId) returns (
+            bool supported
+        ) {
             if (supported) {
                 return (
                     callWithOffchainLookupPropagation(
@@ -89,18 +89,14 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
             address
         )
     {
-        (
-            bytes memory resolvedReverseData,
-            address reverseResolverAddress
-        ) = this.resolve(
-                reverseName,
-                abi.encodeCall(INameResolver.name, reverseName.namehash(0))
-            );
+        (bytes memory resolvedReverseData, address reverseResolverAddress) = this.resolve(
+            reverseName,
+            abi.encodeCall(INameResolver.name, reverseName.namehash(0))
+        );
 
         string memory resolvedName = abi.decode(resolvedReverseData, (string));
 
-        (bytes memory encodedName, bytes32 namehash) = resolvedName
-            .dnsEncodeName();
+        (bytes memory encodedName, bytes32 namehash) = resolvedName.dnsEncodeName();
 
         (bytes memory resolvedData, address resolverAddress) = this.resolve(
             encodedName,
@@ -109,21 +105,10 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
 
         address resolvedAddress = abi.decode(resolvedData, (address));
 
-        return (
-            resolvedName,
-            resolvedAddress,
-            reverseResolverAddress,
-            resolverAddress
-        );
+        return (resolvedName, resolvedAddress, reverseResolverAddress, resolverAddress);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IExtendedResolver).interfaceId ||
             super.supportsInterface(interfaceId);
@@ -155,20 +140,14 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
             bytes memory errorId = LowLevelCallUtils.readReturnData(0, 4);
             if (bytes4(errorId) == OffchainLookup.selector) {
                 // Offchain lookup. Decode the revert message and create our own that nests it.
-                bytes memory revertData = LowLevelCallUtils.readReturnData(
-                    4,
-                    size - 4
-                );
+                bytes memory revertData = LowLevelCallUtils.readReturnData(4, size - 4);
                 (
                     address sender,
                     string[] memory urls,
                     bytes memory callData,
                     bytes4 innerCallbackFunction,
                     bytes memory extraData
-                ) = abi.decode(
-                        revertData,
-                        (address, string[], bytes, bytes4, bytes)
-                    );
+                ) = abi.decode(revertData, (address, string[], bytes, bytes4, bytes));
                 if (sender == target) {
                     revert OffchainLookup(
                         address(this),
@@ -194,19 +173,14 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
         view
         returns (bytes memory)
     {
-        (
-            address target,
-            bytes4 innerCallbackFunction,
-            bytes memory innerExtraData
-        ) = abi.decode(extraData, (address, bytes4, bytes));
+        (address target, bytes4 innerCallbackFunction, bytes memory innerExtraData) = abi.decode(
+            extraData,
+            (address, bytes4, bytes)
+        );
         return
             abi.decode(
                 target.functionStaticCall(
-                    abi.encodeWithSelector(
-                        innerCallbackFunction,
-                        response,
-                        innerExtraData
-                    )
+                    abi.encodeWithSelector(innerCallbackFunction, response, innerExtraData)
                 ),
                 (bytes)
             );
@@ -218,11 +192,7 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
      * @param name The name to resolve, in DNS-encoded and normalised form.
      * @return The Resolver responsible for this name, and the namehash of the full name.
      */
-    function findResolver(bytes calldata name)
-        public
-        view
-        returns (Resolver, bytes32)
-    {
+    function findResolver(bytes calldata name) public view returns (Resolver, bytes32) {
         (address resolver, bytes32 labelhash) = findResolver(name, 0);
         return (Resolver(resolver), labelhash);
     }
@@ -238,10 +208,7 @@ contract UniversalResolver is IExtendedResolver, ERC165 {
         }
         uint256 nextLabel = offset + labelLength + 1;
         bytes32 labelHash = keccak256(name[offset + 1:nextLabel]);
-        (address parentresolver, bytes32 parentnode) = findResolver(
-            name,
-            nextLabel
-        );
+        (address parentresolver, bytes32 parentnode) = findResolver(name, nextLabel);
         bytes32 node = keccak256(abi.encodePacked(parentnode, labelHash));
         address resolver = registry.resolver(node);
         if (resolver != address(0)) {

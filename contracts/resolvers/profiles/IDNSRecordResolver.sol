@@ -3,12 +3,7 @@ pragma solidity >=0.8.4;
 
 interface IDNSRecordResolver {
     // DNSRecordChanged is emitted whenever a given node/name/resource's RRSET is updated.
-    event DNSRecordChanged(
-        bytes32 indexed node,
-        bytes name,
-        uint16 resource,
-        bytes record
-    );
+    event DNSRecordChanged(bytes32 indexed node, bytes name, uint16 resource, bytes record);
     // DNSRecordDeleted is emitted whenever a given node/name/resource's RRSET is deleted.
     event DNSRecordDeleted(bytes32 indexed node, bytes name, uint16 resource);
     // DNSZoneCleared is emitted whenever a given node's zone information is cleared.

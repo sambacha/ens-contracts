@@ -19,9 +19,7 @@ contract DummyDnsRegistrarDNSSEC {
         uint64 _inserted,
         bytes memory _proof
     ) public {
-        Data storage rr = datas[
-            keccak256(abi.encodePacked(_expectedType, _expectedName))
-        ];
+        Data storage rr = datas[keccak256(abi.encodePacked(_expectedType, _expectedName))];
         rr.inception = _inception;
         rr.inserted = _inserted;
 
@@ -45,10 +43,11 @@ contract DummyDnsRegistrarDNSSEC {
         return (rr.inception, rr.inserted, rr.hash);
     }
 
-    function submitRRSets(
-        DNSSEC.RRSetWithSignature[] memory input,
-        bytes calldata
-    ) public virtual returns (bytes memory) {
+    function submitRRSets(DNSSEC.RRSetWithSignature[] memory input, bytes calldata)
+        public
+        virtual
+        returns (bytes memory)
+    {
         return input[input.length - 1].rrset;
     }
 }

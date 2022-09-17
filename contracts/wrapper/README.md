@@ -13,7 +13,7 @@ Making ENS names ERC1155 compatible allows them to be displayed, transferred and
 
 `NameWrapper` implements the optional ERC1155 metadata extension; presently this is via an HTTPS URL to a service ENS operates, but this can be changed in future as better options become available.
 
-With the exception of the functionality to upgrade the metadata generation for tokens. 
+With the exception of the functionality to upgrade the metadata generation for tokens.
 
 ## Wrapping a name
 
@@ -21,7 +21,7 @@ With the exception of the functionality to upgrade the metadata generation for t
 
 In order to wrap a `.eth` 2LD, the owner of the name must have authorised the wrapper by calling `setApprovalForAll` on the registrar, and the caller of `wrapETH2LD` must be either the owner, or authorised by the owner on either the wrapper or the registrar.
 
-All other domains (non `.eth` names as well as `.eth` subdomains such as `sub.example.eth` can be wrapped by calling `wrap(dnsEncodedName, wrappedOwner, resolver)`. `parentNode` is the namehash of the name one level higher than the name to be wrapped, `dnsEncodedName` is the full [DNS encoded name](http://www.tcpipguide.com/free/t_DNSNameNotationandMessageCompressionTechnique.htm#:~:text=Instead%2C%20DNS%20uses%20a%20special,are%20encoded%2C%20one%20per%20byte.), `wrappedOwner` is the address that should own the wrapped name. To wrap `sub.example.eth`, you should call `wrap(encodeDNSName('sub.example.eth'), owner, resolver)`. 
+All other domains (non `.eth` names as well as `.eth` subdomains such as `sub.example.eth` can be wrapped by calling `wrap(dnsEncodedName, wrappedOwner, resolver)`. `parentNode` is the namehash of the name one level higher than the name to be wrapped, `dnsEncodedName` is the full [DNS encoded name](http://www.tcpipguide.com/free/t_DNSNameNotationandMessageCompressionTechnique.htm#:~:text=Instead%2C%20DNS%20uses%20a%20special,are%20encoded%2C%20one%20per%20byte.), `wrappedOwner` is the address that should own the wrapped name. To wrap `sub.example.eth`, you should call `wrap(encodeDNSName('sub.example.eth'), owner, resolver)`.
 
 In order to wrap a domain that is not a `.eth` 2LD, the owner of the name must have authorised the wrapper by calling `setApprovalForAll` on the registry, and the caller of `wrap` must be either the owner, or authorised by the owner on either the wrapper or the registry.
 
@@ -37,7 +37,7 @@ Example:
 // Using ethers.js v5
 abiCoder.encode(
   ['string', 'address', 'uint32', 'uint64', 'address'],
-  ['vitalik', '0x...', 1, 0, '0x...']
+  ['vitalik', '0x...', 1, 0, '0x...'],
 )
 ```
 
@@ -49,7 +49,7 @@ Wrapped names can be unwrapped by calling either `unwrapETH2LD(labelHash, newReg
 
 The wrapper exposes almost all the registry functionality via its own methods - `setRecord`, `setResolver` and `setTTL` are all implemented with the same functionality as the registry, and pass through to it after doing authorisation checks. Transfers are handled via ERC1155's transfer methods rather than mirroring the registry's `setOwner` method.
 
-In addition, `setSubnodeOwner` and `setSubnodeRecord` methods are enhanced, which create or replace subdomains while automatically wrapping the resulting subdomain if it is not already wrapped. 
+In addition, `setSubnodeOwner` and `setSubnodeRecord` methods are enhanced, which create or replace subdomains while automatically wrapping the resulting subdomain if it is not already wrapped.
 
 All functions for working with wrapped names utilise ERC1155's authorisation mechanism, meaning an account that is authorised to act on behalf of another account can manage all its names.
 
@@ -61,14 +61,13 @@ Before any fuses can be burned on a name, the name's `PARENT_CANNOT_CONTROL` fus
 
 When any fuses on a name are burned, the "unwrap" fuse must also be burned, to prevent the name being directly unwrapped and re-wrapped to reset the fuses. This restriction is also enforced by the contract and reverts if you try to burn fuses on a name that does not have those fuses burned.
 
-In addition to burning these two fuses a name must also have an expiry of less than the current date. If the name has expired, the fuses will automatically be set to 0. This is enforced by the contract, but does *not* revert, however no fuses will be burned. Expiry will be explained in more detail below.
+In addition to burning these two fuses a name must also have an expiry of less than the current date. If the name has expired, the fuses will automatically be set to 0. This is enforced by the contract, but does _not_ revert, however no fuses will be burned. Expiry will be explained in more detail below.
 
 The ENS root and the .eth 2LD are treated as having the "replace subdomain" and "unwrap" fuses burned. There is one edge-case here insofar as a .eth name's registration can expire; at that point the name can be purchased by a new registrant and effectively becomes unwrapped despite any fuse restrictions. When that name is re-wrapped, fuse fields can be set to a more permissive value than the name previously had. Any application relying on fuse values for .eth subdomains should check the expiration date of the .eth name and warn users if this is likely to expire soon.
 
 The fuses field is 32 bits, and only 7 fuses are defined by the `NameWrapper` contract itself. Applications may use additional fuse bits to encode their own restrictions on applications. Any application wishing to do so should submit a PR to this README in order to record the use of the value and ensure there is no unintentional overlap.
 
 Each fuse is represented by a single bit. If that bit is cleared (0) the restriction is not applied, and if it is set (1) the restriction is applied. Any updates to the fuse field for a name are treated as a logical-OR; as a result bits can only be set, never cleared.
-
 
 ### CANNOT_UNWRAP = 1
 
@@ -100,7 +99,7 @@ If this fuse is burned, existing subdomains cannot be replaced by the parent nam
 
 ### Expiry
 
-Each name has an expiry field that is associated with each wrapped name. A valid expiry enforces all fuses and conversely an invalid expiry changes all the fuses of a name to 0. If a name has fuses burned and the expiry is still in the future, it is guaranteed to be safe until that time. Expiry can *only* be extended and never reversed and only the owner of the parent (except for .eth 2LDs) can change the expiry. It can *only* be extended up to the parent's current expiry. Adding these restrictions means that you only have to look at the name itself's fuses and expiry (without traversing the hierarchy) to understand what guarantees you have.
+Each name has an expiry field that is associated with each wrapped name. A valid expiry enforces all fuses and conversely an invalid expiry changes all the fuses of a name to 0. If a name has fuses burned and the expiry is still in the future, it is guaranteed to be safe until that time. Expiry can _only_ be extended and never reversed and only the owner of the parent (except for .eth 2LDs) can change the expiry. It can _only_ be extended up to the parent's current expiry. Adding these restrictions means that you only have to look at the name itself's fuses and expiry (without traversing the hierarchy) to understand what guarantees you have.
 
 Expiry for .eth name is not the same as the expiry date in the BaseRegistrar. The expiry of a .eth name can be set by the owner of the name itself (not just the parent) and can be anything up to the expiry in the BaseRegistrar.
 
@@ -111,7 +110,7 @@ To check whether or not a fuse is burnt you can use this function that takes a f
 ```js
 const areBurned = await allFusesBurned(
   namehash('vitalik.eth'),
-  CANNOT_TRANSFER | CANNOT_SET_RESOLVER
+  CANNOT_TRANSFER | CANNOT_SET_RESOLVER,
 )
 // if CANNOT_UNWRAP AND CANNOT_SET_RESOLVER are *both* burned this will return true
 ```

@@ -38,8 +38,7 @@ contract DNSRegistrar is IDNSRegistrar {
     ENS public ens;
     PublicSuffixList public suffixes;
 
-    bytes4 private constant INTERFACE_META_ID =
-        bytes4(keccak256("supportsInterface(bytes4)"));
+    bytes4 private constant INTERFACE_META_ID = bytes4(keccak256("supportsInterface(bytes4)"));
 
     event Claim(bytes32 indexed node, address indexed owner, bytes dnsname);
     event NewOracle(address oracle);
@@ -87,10 +86,7 @@ contract DNSRegistrar is IDNSRegistrar {
      *        record.
      */
     function claim(bytes memory name, bytes memory proof) public override {
-        (bytes32 rootNode, bytes32 labelHash, address addr) = _claim(
-            name,
-            proof
-        );
+        (bytes32 rootNode, bytes32 labelHash, address addr) = _claim(name, proof);
         ens.setSubnodeOwner(rootNode, labelHash, addr);
     }
 
@@ -118,27 +114,12 @@ contract DNSRegistrar is IDNSRegistrar {
         address addr
     ) public override {
         proof = oracle.submitRRSets(input, proof);
-        (bytes32 rootNode, bytes32 labelHash, address owner) = _claim(
-            name,
-            proof
-        );
-        require(
-            msg.sender == owner,
-            "Only owner can call proveAndClaimWithResolver"
-        );
+        (bytes32 rootNode, bytes32 labelHash, address owner) = _claim(name, proof);
+        require(msg.sender == owner, "Only owner can call proveAndClaimWithResolver");
         if (addr != address(0)) {
-            require(
-                resolver != address(0),
-                "Cannot set addr if resolver is not set"
-            );
+            require(resolver != address(0), "Cannot set addr if resolver is not set");
             // Set ourselves as the owner so we can set a record on the resolver
-            ens.setSubnodeRecord(
-                rootNode,
-                labelHash,
-                address(this),
-                resolver,
-                0
-            );
+            ens.setSubnodeRecord(rootNode, labelHash, address(this), resolver, 0);
             bytes32 node = keccak256(abi.encodePacked(rootNode, labelHash));
             // Set the resolver record
             AddrResolver(resolver).setAddr(node, addr);
@@ -149,14 +130,8 @@ contract DNSRegistrar is IDNSRegistrar {
         }
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        returns (bool)
-    {
-        return
-            interfaceID == INTERFACE_META_ID ||
-            interfaceID == type(IDNSRegistrar).interfaceId;
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+        return interfaceID == INTERFACE_META_ID || interfaceID == type(IDNSRegistrar).interfaceId;
     }
 
     function _claim(bytes memory name, bytes memory proof)
@@ -172,31 +147,18 @@ contract DNSRegistrar is IDNSRegistrar {
         labelHash = name.keccak(1, labelLen);
 
         // Parent name must be in the public suffix list.
-        bytes memory parentName = name.substring(
-            labelLen + 1,
-            name.length - labelLen - 1
-        );
-        require(
-            suffixes.isPublicSuffix(parentName),
-            "Parent name must be a public suffix"
-        );
+        bytes memory parentName = name.substring(labelLen + 1, name.length - labelLen - 1);
+        require(suffixes.isPublicSuffix(parentName), "Parent name must be a public suffix");
 
         // Make sure the parent name is enabled
         rootNode = enableNode(parentName, 0);
 
         (addr, ) = DNSClaimChecker.getOwnerAddress(oracle, name, proof);
 
-        emit Claim(
-            keccak256(abi.encodePacked(rootNode, labelHash)),
-            addr,
-            name
-        );
+        emit Claim(keccak256(abi.encodePacked(rootNode, labelHash)), addr, name);
     }
 
-    function enableNode(bytes memory domain, uint256 offset)
-        internal
-        returns (bytes32 node)
-    {
+    function enableNode(bytes memory domain, uint256 offset) internal returns (bytes32 node) {
         uint256 len = domain.readUint8(offset);
         if (len == 0) {
             return bytes32(0);

@@ -18,9 +18,7 @@ abstract contract Multicallable is IMulticallable, ERC165 {
                     "multicall: All records must have a matching namehash"
                 );
             }
-            (bool success, bytes memory result) = address(this).delegatecall(
-                data[i]
-            );
+            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
             require(success);
             results[i] = result;
         }
@@ -37,23 +35,12 @@ abstract contract Multicallable is IMulticallable, ERC165 {
         return _multicall(nodehash, data);
     }
 
-    function multicall(bytes[] calldata data)
-        public
-        override
-        returns (bytes[] memory results)
-    {
+    function multicall(bytes[] calldata data) public override returns (bytes[] memory results) {
         return _multicall(bytes32(0), data);
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) public view virtual override returns (bool) {
         return
-            interfaceID == type(IMulticallable).interfaceId ||
-            super.supportsInterface(interfaceID);
+            interfaceID == type(IMulticallable).interfaceId || super.supportsInterface(interfaceID);
     }
 }

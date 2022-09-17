@@ -53,10 +53,7 @@ abstract contract InterfaceResolver is IInterfaceResolver, AddrResolver {
         }
 
         (bool success, bytes memory returnData) = a.staticcall(
-            abi.encodeWithSignature(
-                "supportsInterface(bytes4)",
-                type(IERC165).interfaceId
-            )
+            abi.encodeWithSignature("supportsInterface(bytes4)", type(IERC165).interfaceId)
         );
         if (!success || returnData.length < 32 || returnData[31] == 0) {
             // EIP 165 not supported by target
@@ -74,13 +71,7 @@ abstract contract InterfaceResolver is IInterfaceResolver, AddrResolver {
         return a;
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) public view virtual override returns (bool) {
         return
             interfaceID == type(IInterfaceResolver).interfaceId ||
             super.supportsInterface(interfaceID);

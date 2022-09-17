@@ -49,8 +49,7 @@ contract UpgradedNameWrapperMock {
         registrar.transferFrom(registrant, address(this), tokenId);
         registrar.reclaim(tokenId, address(this));
         require(
-            registrant == msg.sender ||
-                registrar.isApprovedForAll(registrant, msg.sender),
+            registrant == msg.sender || registrar.isApprovedForAll(registrant, msg.sender),
             "Unauthorised"
         );
         emit WrapETH2LD(label, wrappedOwner, fuses, expiry, resolver);
@@ -75,14 +74,6 @@ contract UpgradedNameWrapperMock {
             "Not owner/approved or previous nameWrapper controller"
         );
         ens.setOwner(node, address(this));
-        emit SetSubnodeRecord(
-            parentNode,
-            label,
-            newOwner,
-            resolver,
-            ttl,
-            fuses,
-            expiry
-        );
+        emit SetSubnodeRecord(parentNode, label, newOwner, resolver, ttl, fuses, expiry);
     }
 }

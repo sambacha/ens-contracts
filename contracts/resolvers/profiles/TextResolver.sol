@@ -39,15 +39,8 @@ abstract contract TextResolver is ITextResolver, ResolverBase {
         return texts[node][key];
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) public view virtual override returns (bool) {
         return
-            interfaceID == type(ITextResolver).interfaceId ||
-            super.supportsInterface(interfaceID);
+            interfaceID == type(ITextResolver).interfaceId || super.supportsInterface(interfaceID);
     }
 }

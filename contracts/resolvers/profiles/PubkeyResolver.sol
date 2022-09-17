@@ -34,23 +34,11 @@ abstract contract PubkeyResolver is IPubkeyResolver, ResolverBase {
      * @return x The X coordinate of the curve point for the public key.
      * @return y The Y coordinate of the curve point for the public key.
      */
-    function pubkey(bytes32 node)
-        external
-        view
-        virtual
-        override
-        returns (bytes32 x, bytes32 y)
-    {
+    function pubkey(bytes32 node) external view virtual override returns (bytes32 x, bytes32 y) {
         return (pubkeys[node].x, pubkeys[node].y);
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) public view virtual override returns (bool) {
         return
             interfaceID == type(IPubkeyResolver).interfaceId ||
             super.supportsInterface(interfaceID);

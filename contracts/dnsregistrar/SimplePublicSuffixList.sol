@@ -13,12 +13,7 @@ contract SimplePublicSuffixList is PublicSuffixList, Ownable {
         }
     }
 
-    function isPublicSuffix(bytes calldata name)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isPublicSuffix(bytes calldata name) external view override returns (bool) {
         return suffixes[name];
     }
 }

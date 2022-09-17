@@ -3,9 +3,7 @@ pragma solidity >=0.8.4;
 import "./IPriceOracle.sol";
 
 interface IETHRegistrarController {
-    function rentPrice(string memory, uint256)
-        external
-        returns (IPriceOracle.Price memory);
+    function rentPrice(string memory, uint256) external returns (IPriceOracle.Price memory);
 
     function available(string memory) external returns (bool);
 

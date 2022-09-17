@@ -18,21 +18,14 @@ pragma solidity ^0.8.4;
  */
 contract EllipticCurve {
     // Set parameters for curve.
-    uint256 constant a =
-        0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC;
-    uint256 constant b =
-        0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B;
-    uint256 constant gx =
-        0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296;
-    uint256 constant gy =
-        0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5;
-    uint256 constant p =
-        0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
-    uint256 constant n =
-        0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551;
+    uint256 constant a = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC;
+    uint256 constant b = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B;
+    uint256 constant gx = 0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296;
+    uint256 constant gy = 0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5;
+    uint256 constant p = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
+    uint256 constant n = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551;
 
-    uint256 constant lowSmax =
-        0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+    uint256 constant lowSmax = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
 
     /**
      * @dev Inverse of u in the field of modulo m.
@@ -62,11 +55,7 @@ contract EllipticCurve {
     /**
      * @dev Transform affine coordinates into projective coordinates.
      */
-    function toProjectivePoint(uint256 x0, uint256 y0)
-        internal
-        pure
-        returns (uint256[3] memory P)
-    {
+    function toProjectivePoint(uint256 x0, uint256 y0) internal pure returns (uint256[3] memory P) {
         P[2] = addmod(0, 1, p);
         P[0] = mulmod(x0, P[2], p);
         P[1] = mulmod(y0, P[2], p);
@@ -126,11 +115,7 @@ contract EllipticCurve {
     /**
      * @dev Check if the curve is the zero curve.
      */
-    function isZeroCurve(uint256 x0, uint256 y0)
-        internal
-        pure
-        returns (bool isZero)
-    {
+    function isZeroCurve(uint256 x0, uint256 y0) internal pure returns (bool isZero) {
         if (x0 == 0 && y0 == 0) {
             return true;
         }
@@ -329,11 +314,7 @@ contract EllipticCurve {
     /**
      * @dev Double an elliptic curve point in affine coordinates.
      */
-    function twice(uint256 x0, uint256 y0)
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+    function twice(uint256 x0, uint256 y0) internal pure returns (uint256, uint256) {
         uint256 z0;
 
         (x0, y0, z0) = twiceProj(x0, y0, 1);
@@ -405,11 +386,7 @@ contract EllipticCurve {
     /**
      * @dev Multiply the curve's generator point by a scalar.
      */
-    function multipleGeneratorByScalar(uint256 scalar)
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+    function multipleGeneratorByScalar(uint256 scalar) internal pure returns (uint256, uint256) {
         return multiplyScalar(gx, gy, scalar);
     }
 

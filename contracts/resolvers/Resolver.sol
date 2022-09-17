@@ -72,9 +72,7 @@ interface Resolver is
         address implementer
     ) external;
 
-    function multicall(bytes[] calldata data)
-        external
-        returns (bytes[] memory results);
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results);
 
     function multicallWithNodeCheck(bytes32 nodehash, bytes[] calldata data)
         external

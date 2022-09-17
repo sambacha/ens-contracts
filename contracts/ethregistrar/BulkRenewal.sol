@@ -24,10 +24,7 @@ contract BulkRenewal is IBulkRenewal {
         Resolver r = Resolver(ens.resolver(ETH_NAMEHASH));
         return
             ETHRegistrarController(
-                r.interfaceImplementer(
-                    ETH_NAMEHASH,
-                    type(IETHRegistrarController).interfaceId
-                )
+                r.interfaceImplementer(ETH_NAMEHASH, type(IETHRegistrarController).interfaceId)
             );
     }
 
@@ -39,39 +36,22 @@ contract BulkRenewal is IBulkRenewal {
     {
         ETHRegistrarController controller = getController();
         for (uint256 i = 0; i < names.length; i++) {
-            IPriceOracle.Price memory price = controller.rentPrice(
-                names[i],
-                duration
-            );
+            IPriceOracle.Price memory price = controller.rentPrice(names[i], duration);
             total += (price.base + price.premium);
         }
     }
 
-    function renewAll(string[] calldata names, uint256 duration)
-        external
-        payable
-        override
-    {
+    function renewAll(string[] calldata names, uint256 duration) external payable override {
         ETHRegistrarController controller = getController();
         for (uint256 i = 0; i < names.length; i++) {
-            IPriceOracle.Price memory price = controller.rentPrice(
-                names[i],
-                duration
-            );
-            controller.renew{value: price.base + price.premium}(
-                names[i],
-                duration
-            );
+            IPriceOracle.Price memory price = controller.rentPrice(names[i], duration);
+            controller.renew{ value: price.base + price.premium }(names[i], duration);
         }
         // Send any excess funds back
         payable(msg.sender).transfer(address(this).balance);
     }
 
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
         return
             interfaceID == type(IERC165).interfaceId ||
             interfaceID == type(IBulkRenewal).interfaceId;
