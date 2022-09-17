@@ -4,7 +4,7 @@ library SHA1 {
     event Debug(bytes32 x);
 
     function sha1(bytes memory data) internal pure returns (bytes20 ret) {
-        assembly {
+        assembly ("memory-safe") {
             // Get a safe scratch location
             let scratch := mload(0x40)
 

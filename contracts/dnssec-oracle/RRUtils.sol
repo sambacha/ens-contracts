@@ -463,7 +463,7 @@ library RRUtils {
             uint256 ac2;
             for (uint256 i = 0; i < data.length + 31; i += 32) {
                 uint256 word;
-                assembly {
+                assembly ("memory-safe") {
                     word := mload(add(add(data, 32), i))
                 }
                 if (i + 32 > data.length) {

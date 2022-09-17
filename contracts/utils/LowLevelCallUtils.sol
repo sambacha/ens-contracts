@@ -23,7 +23,7 @@ library LowLevelCallUtils {
             target.isContract(),
             "LowLevelCallUtils: static call to non-contract"
         );
-        assembly {
+        assembly ("memory-safe") {
             success := staticcall(
                 gas(),
                 target,
@@ -39,7 +39,7 @@ library LowLevelCallUtils {
      * @dev Returns the size of the return data of the most recent external call.
      */
     function returnDataSize() internal pure returns (uint256 len) {
-        assembly {
+        assembly ("memory-safe") {
             len := returndatasize()
         }
     }
@@ -55,7 +55,7 @@ library LowLevelCallUtils {
         returns (bytes memory data)
     {
         data = new bytes(length);
-        assembly {
+        assembly ("memory-safe") {
             returndatacopy(add(data, 32), offset, length)
         }
     }
@@ -64,7 +64,7 @@ library LowLevelCallUtils {
      * @dev Reverts with the return data from the most recent external call.
      */
     function propagateRevert() internal pure {
-        assembly {
+        assembly ("memory-safe") {
             returndatacopy(0, 0, returndatasize())
             revert(0, returndatasize())
         }

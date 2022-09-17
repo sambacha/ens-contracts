@@ -15,7 +15,7 @@ library BytesUtils {
         uint256 len
     ) internal pure returns (bytes32 ret) {
         require(offset + len <= self.length);
-        assembly {
+        assembly ("memory-safe") {
             ret := keccak256(add(add(self, 32), offset), len)
         }
     }
